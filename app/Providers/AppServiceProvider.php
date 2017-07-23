@@ -5,6 +5,9 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Dusk\DuskServiceProvider;
 
+use App\Request\Contract\SaveCarRequest as SaveCarRequestInterface;
+use App\Request\SaveCarRequest;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -27,5 +30,6 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('local', 'testing')) {
             $this->app->register(DuskServiceProvider::class);
         }
+        $this->app->bind(SaveCarRequestInterface::class, SaveCarRequest::class);
     }
 }
