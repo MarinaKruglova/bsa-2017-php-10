@@ -22,15 +22,16 @@ class CarManager implements CarManagerContract
 
     public function findCarsFromActiveUsers(): Collection
     {
-        return Car::whereHas('user', function ($q)
+        return Car::whereHas('user', function ($query)
         {
-            $q->where('is_active', true);
+            $query->where('is_active', true);
         })->get();
     }
 
     public function saveCar(SaveCarRequest $request): Car
     {
         $car = $request->getCar();
+
         $car->color = $request->getColor();
         $car->model = $request->getModel();
         $car->registration_number = $request->getRegistrationNumber();
@@ -39,16 +40,17 @@ class CarManager implements CarManagerContract
         $car->price = $request->getPrice();
         $car->user_id = $request->getUser()->id;
         $car->save();
+
         return $car;
     }
 
-    public function deleteCar(int $carId)
+    public function deleteCar(int $id)
     {
-        $car = $this->findById($carId);
+        $car = $this->findById($id);
         if ($car !== null) {
             $car->delete();
         } else {
-            return;
+            return false;
         }
     }
 }

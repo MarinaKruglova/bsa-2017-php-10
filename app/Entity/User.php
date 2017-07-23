@@ -18,7 +18,7 @@ class User extends Authenticatable implements AuthenticatableInterface
         'first_name',
         'last_name',
         'is_active',
-        'name',
+        'is_admin',
         'email',
         'password'
     ];
@@ -32,6 +32,7 @@ class User extends Authenticatable implements AuthenticatableInterface
      */
     protected $casts = [
         'is_active' => 'boolean',
+        'is_admin' => 'boolean',
     ];
 
     public function cars()

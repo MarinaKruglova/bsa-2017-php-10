@@ -17,6 +17,11 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('cars', 'Api\CarController@index');
-Route::get('cars/{id}', 'Api\CarController@show');
-Route::resource('admin/cars', 'Api\CarController', ['except' => ['create', 'edit']]);
+Route::middleware(['auth'])->prefix('cars')->group(function () {
+    Route::get('/', 'Api\CarController@showItemsIndex');
+    Route::get('/{id}', 'Api\CarController@showItem');
+});
+
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::resource('/cars', 'Api\CarController', ['except' => ['create', 'edit']]);
+});

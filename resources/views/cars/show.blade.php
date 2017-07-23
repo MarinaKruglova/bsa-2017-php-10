@@ -19,8 +19,18 @@
                     </p>
                 </div>
                 <div class="card-footer">
-                    <a class="btn btn-success edit-button" href="{{ route('car-edit', ['id' => $car['id']]) }}">Edit</a>
-                    <a href="{{ route('cars-list') }}" class="btn btn-danger delete-button">Delete</a>
+                    <div class="row">
+                    @can('edit', $car)
+                        <a class="btn btn-success edit-button" href="{{ route('car-edit', ['id' => $car['id']]) }}">Edit</a>
+                    @endcan
+                    @can('edit', $car)
+                        <form id="delete" action="{{ route('car-destroy', $car['id']) }}" method="POST">
+                            {{ csrf_field() }}
+                            <input type="hidden" name="_method" value="delete">
+                            <button role="button" class="btn btn-danger delete-button">Delete</button>
+                        </form>
+                    @endcan
+                    </div>
                 </div>
             </div>
         </div>

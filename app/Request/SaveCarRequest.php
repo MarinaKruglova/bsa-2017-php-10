@@ -4,11 +4,10 @@ namespace App\Request;
 
 use App\Entity\Car;
 use App\Entity\User;
-use Illuminate\Http\Request;
-use Illuminate\Foundation\Http\FormRequest;
 use App\Request\Contract\SaveCarRequest as SaveCarRequestContract;
+use Illuminate\Http\Request;
 
-class SaveCarRequest extends FormRequest implements SaveCarRequestContract
+class SaveCarRequest implements SaveCarRequestContract
 {
     protected $car = null;
     public $request;
@@ -19,28 +18,13 @@ class SaveCarRequest extends FormRequest implements SaveCarRequestContract
     }
 
     /**
-     * Get the validation rules that apply to the request
-     *
-     * @return array
-     */
-    public function rules()
-    {
-        return [
-            'model' => 'required|max:255',
-            'year' => 'required|integer|between:1000,'.date('Y'),
-            'registration_number' => 'required|alpha_num|size:6',
-            'color' => 'required|alpha|max:255',
-            'price' => 'required|numeric|min:1'
-        ];
-    }
-
-    /**
      * @return Car
      */
     public function getCar(): Car
     {
         return $this->car ?: new Car();
     }
+
     /**
      * @param Car $car
      */
@@ -102,7 +86,7 @@ class SaveCarRequest extends FormRequest implements SaveCarRequestContract
      */
     public function getUser(): User
     {
-        $userId = (int)$this->request->user;
-        return User::find($userId) ?: new User;
+        $id = (int)$this->request->user;
+        return User::find($id) ?: new User;
     }
 }

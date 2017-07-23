@@ -11,17 +11,20 @@ use Illuminate\Support\Facades\Gate;
 use App\Entity\Car;
 use App\Entity\User;
 use App\Manager\CarManager;
-use App\Request\Contract\SaveCarRequest;
-
+use App\Manager\UserManager;
+use App\Request\SaveCarFormRequest;
+use App\Request\SaveCarRequest;
 
 class CarController extends Controller
 {
 
     private $carManager;
+    private $userManager;
 
-    public function __construct(CarManager $carManager)
+    public function __construct(CarManager $carManager, UserManager $userManager)
     {
         $this->carManager = $carManager;
+        $this->userManager = $userManager;
     }
 
     /**
@@ -54,7 +57,13 @@ class CarController extends Controller
      */
     public function create()
     {
-        return view('cars/create');
+        $car = new Car();
+
+        if (Gate::allows('create', $car)) {
+            return view('cars/create');
+        } else {
+            return redirect('/');
+        }
     }
 
     /**
@@ -68,12 +77,12 @@ class CarController extends Controller
         $car = $this->carManager->findById($id);
 
         if (!is_null($car)) {
-            $response = view('cars/show', ['car' => $car->toArray()]);
-        } else {
-            $response = view('errors/404');
-        }
 
-        return $response;
+            return view('cars/show', ['car' => $car]);
+        } else {
+
+            return view('errors/404');
+        }
     }
 
     /**
@@ -86,33 +95,37 @@ class CarController extends Controller
     {
         $car = $this->carManager->findById($id);
 
-        return view('cars/edit', ['car' => $car->toArray()]);
+        if (Gate::allows('edit', $car)) {
+
+            return view('cars/edit', ['car' => $car]);
+        } else {
+
+            return redirect('/');
+        }
     }
 
     /**
      * Update item values
      *
-     * @param ValidateCarRequest $request
+     * @param SaveCarFormRequest $request
      * @param int $id
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
 
-    public function update(SaveCarRequest $request, int $id)
+    public function update(SaveCarFormRequest $request, int $id)
     {
-        $this->validate($request, [
-            'model' => 'required|max:255',
-            'year' => 'required|integer|between:1000,'.date('Y'),
-            'registration_number' => 'required|alpha_num|size:6',
-            'color' => 'required|alpha|max:255',
-            'price' => 'required|numeric|min:1'
-        ]);
-
         $car = $this->carManager->findById($id);
 
         if (!is_null($car)) {
-            $this->carManager->saveCar($request);
+            if (Gate::allows('edit', $car)) {
+                $carData = new SaveCarRequest($request);
+                $carData->setCar($car);
+                $this->carManager->saveCar($carData);
 
-            return view('cars/show', ['car' => $car]);
+                return view('cars/show', ['car' => $car]);
+            } else {
+                return redirect('/');
+            }
         } else {
             return view('errors/404');
         }
@@ -121,21 +134,19 @@ class CarController extends Controller
     /**
      * Update item values
      *
-     * @param ValidateCarRequest $request
+     * @param SaveCarFormRequest $request
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function store(SaveCarRequest $request)
+    public function store(SaveCarFormRequest $request)
     {
-        $requiredFields = $request->only([
-            'model', 'year', 'registration_number', 'color', 'price'
-        ]);
-        
-        $newCar = new Car($requiredFields);
-        $this->carManager->store($newCar);
 
-        $cars = $this->carManager->getAll();
+        $car = new Car();
+        $carData = new SaveCarRequest($request);
+        $this->carManager->saveCar($carData);
 
-        return view('cars/index', ['cars' => $cars->toArray()]);
+        $cars = $this->carManager->findAll();
+
+        return view('cars/index', ['cars' => $this->carManager->findAll()]);
     }
 
     /**
@@ -147,13 +158,19 @@ class CarController extends Controller
     public function destroy(int $id)
     {
         $car = $this->carManager->findById($id);
-        $collection = $this->carManager->delete($id);
-        if (!is_null($car)) {
-            $response = view('cars/index', ['cars' => $cars->toArray()]);
-        } else {
-            $response = view('errors/404');
-        }
 
-        return $response;
+        if (!is_null($car)) {
+            if (Gate::allows('delete', $car)) {
+                $this->carManager->deleteCar($id);
+
+                return redirect()->route('cars-list');
+            } else {
+
+                return redirect('/');
+            }
+        } else {
+
+            return view('errors/404');
+        }
     }
 }
